@@ -720,13 +720,16 @@
 
         // Initialize Three.js with Advanced Graphics
         function initThreeJS() {
+            console.log('Initializing Three.js scene...');
+            
             scene = new THREE.Scene();
             
             // Advanced fog for depth
             scene.fog = new THREE.FogExp2(0x1a1a2e, 0.0015);
 
             camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 2000);
-            camera.position.set(0, 18, 30);
+            camera.position.set(0, 20, 35);
+            camera.lookAt(0, 0, 0);
 
             renderer = new THREE.WebGLRenderer({ 
                 antialias: true, 
@@ -742,17 +745,27 @@
             renderer.outputEncoding = THREE.sRGBEncoding;
             renderer.setClearColor(0x0a0a15, 1);
             
-            document.getElementById('gameCanvas').appendChild(renderer.domElement);
+            const container = document.getElementById('gameCanvas');
+            container.appendChild(renderer.domElement);
+            console.log('Renderer added to DOM');
 
             // Advanced Lighting Setup
             setupLighting();
+            console.log('Lighting setup complete');
 
             // Create Environment
             createDetailedGround();
+            console.log('Ground created');
+            
             createRealisticCity();
+            console.log('City created');
+            
             createAtmosphere();
+            console.log('Atmosphere created');
 
             window.addEventListener('resize', onWindowResize);
+            
+            console.log('Three.js initialization complete!');
         }
 
         function setupLighting() {
@@ -1833,12 +1846,18 @@
             document.getElementById('speedometer').classList.remove('hidden');
             document.getElementById('minimap').classList.remove('hidden');
             
+            // Ensure scene exists
             if (!scene) {
                 initThreeJS();
             }
             
+            // Create player car
             playerCar = new Car3D(0, 0, cars[selectedCarIndex]);
             
+            // Force initial render
+            renderer.render(scene, camera);
+            
+            // Start animation loop
             animate();
         }
 
@@ -2103,6 +2122,15 @@
         window.addEventListener('load', () => {
             console.log('🏁 Ultra Drift Championship - Ready!');
             initThreeJS();
+            
+            // Start background rendering loop
+            function backgroundRender() {
+                if (!gameState.isPlaying && scene) {
+                    renderer.render(scene, camera);
+                }
+                requestAnimationFrame(backgroundRender);
+            }
+            backgroundRender();
         });
     </script>
 </body>
