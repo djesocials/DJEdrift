@@ -769,22 +769,22 @@
         }
 
         function setupLighting() {
-            // Ambient light (very subtle)
-            const ambientLight = new THREE.AmbientLight(0x4466aa, 0.3);
+            // Ambient light
+            const ambientLight = new THREE.AmbientLight(0x4466aa, 0.4);
             scene.add(ambientLight);
 
-            // Main directional light (sun/moon)
+            // Main directional light (sun/moon) - ONLY THIS ONE CASTS SHADOWS
             const mainLight = new THREE.DirectionalLight(0xffd4aa, 1.2);
             mainLight.position.set(150, 200, 100);
             mainLight.castShadow = true;
-            mainLight.shadow.mapSize.width = 4096;
-            mainLight.shadow.mapSize.height = 4096;
+            mainLight.shadow.mapSize.width = 2048;
+            mainLight.shadow.mapSize.height = 2048;
             mainLight.shadow.camera.near = 0.5;
-            mainLight.shadow.camera.far = 1000;
-            mainLight.shadow.camera.left = -300;
-            mainLight.shadow.camera.right = 300;
-            mainLight.shadow.camera.top = 300;
-            mainLight.shadow.camera.bottom = -300;
+            mainLight.shadow.camera.far = 500;
+            mainLight.shadow.camera.left = -150;
+            mainLight.shadow.camera.right = 150;
+            mainLight.shadow.camera.top = 150;
+            mainLight.shadow.camera.bottom = -150;
             mainLight.shadow.bias = -0.0001;
             scene.add(mainLight);
 
@@ -792,12 +792,12 @@
             const hemiLight = new THREE.HemisphereLight(0x4466ff, 0x2a1a3a, 0.6);
             scene.add(hemiLight);
 
-            // Accent lights for drama
-            const accentLight1 = new THREE.DirectionalLight(0xff6600, 0.4);
+            // Accent lights for drama (NO SHADOWS)
+            const accentLight1 = new THREE.DirectionalLight(0xff6600, 0.3);
             accentLight1.position.set(-100, 50, -100);
             scene.add(accentLight1);
 
-            const accentLight2 = new THREE.DirectionalLight(0x00ccff, 0.3);
+            const accentLight2 = new THREE.DirectionalLight(0x00ccff, 0.25);
             accentLight2.position.set(100, 50, 100);
             scene.add(accentLight2);
         }
@@ -1093,10 +1093,9 @@
         }
 
         function addGroundFloorLighting(x, z, width, depth) {
-            // Storefront lighting
-            const light = new THREE.PointLight(0xffaa44, 2, 30);
+            // Storefront lighting (NO SHADOWS)
+            const light = new THREE.PointLight(0xffaa44, 1.5, 25);
             light.position.set(x, 5, z + depth/2 + 2);
-            light.castShadow = true;
             scene.add(light);
         }
 
@@ -1131,12 +1130,9 @@
                 lightMesh.position.set(x, 11, z);
                 scene.add(lightMesh);
 
-                // Actual light source
-                const streetLight = new THREE.PointLight(0xffaa44, 3, 60);
+                // Actual light source (NO SHADOWS to save texture units)
+                const streetLight = new THREE.PointLight(0xffaa44, 2, 50);
                 streetLight.position.set(x, 11, z);
-                streetLight.castShadow = true;
-                streetLight.shadow.mapSize.width = 512;
-                streetLight.shadow.mapSize.height = 512;
                 scene.add(streetLight);
                 
                 streetLights.push(streetLight);
@@ -1375,18 +1371,16 @@
                 headlight2.position.set(0.9, 0.8, 2.85);
                 this.group.add(headlight2);
 
-                // Headlight beams
-                const headlightBeam1 = new THREE.SpotLight(0xffffee, 3, 80, Math.PI / 6, 0.5, 2);
+                // Headlight beams (NO SHADOWS)
+                const headlightBeam1 = new THREE.SpotLight(0xffffee, 2, 60, Math.PI / 6, 0.5, 2);
                 headlightBeam1.position.set(-0.9, 0.8, 2.85);
                 headlightBeam1.target.position.set(-0.9, 0, 100);
-                headlightBeam1.castShadow = true;
                 this.group.add(headlightBeam1);
                 this.group.add(headlightBeam1.target);
 
-                const headlightBeam2 = new THREE.SpotLight(0xffffee, 3, 80, Math.PI / 6, 0.5, 2);
+                const headlightBeam2 = new THREE.SpotLight(0xffffee, 2, 60, Math.PI / 6, 0.5, 2);
                 headlightBeam2.position.set(0.9, 0.8, 2.85);
                 headlightBeam2.target.position.set(0.9, 0, 100);
-                headlightBeam2.castShadow = true;
                 this.group.add(headlightBeam2);
                 this.group.add(headlightBeam2.target);
 
