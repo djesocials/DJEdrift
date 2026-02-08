@@ -21,9 +21,12 @@
         }
 
         #gameCanvas {
-            display: block;
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100vh;
+            z-index: 0;
         }
 
         .menu-screen {
@@ -445,13 +448,6 @@
     </style>
 </head>
 <body>
-    <div id="loadingScreen" class="loading-screen hidden">
-        <h2 style="font-size: 2em; margin-bottom: 20px;">Loading Assets...</h2>
-        <div class="loading-bar">
-            <div class="loading-progress" id="loadingProgress"></div>
-        </div>
-    </div>
-
     <div id="mainMenu" class="menu-screen">
         <h1 class="game-title">RALLY DRIFT</h1>
         <p class="menu-subtitle">Championship 3D Edition</p>
@@ -749,17 +745,20 @@
             const skyGeometry = new THREE.SphereGeometry(800, 32, 32);
             const skyMaterial = new THREE.MeshBasicMaterial({
                 color: 0x87ceeb,
-                side: THREE.BackSide
+                side: THREE.BackSide,
+                fog: false
             });
             const sky = new THREE.Mesh(skyGeometry, skyMaterial);
             scene.add(sky);
 
-            // Add sun
+            // Add sun with proper emissive material
             const sunGeometry = new THREE.SphereGeometry(20, 32, 32);
-            const sunMaterial = new THREE.MeshBasicMaterial({ 
+            const sunMaterial = new THREE.MeshStandardMaterial({ 
                 color: 0xffffaa,
                 emissive: 0xffff00,
-                emissiveIntensity: 1
+                emissiveIntensity: 1,
+                roughness: 1,
+                metalness: 0
             });
             const sun = new THREE.Mesh(sunGeometry, sunMaterial);
             sun.position.set(200, 300, -400);
@@ -1051,6 +1050,8 @@
 
                 if (this.life <= 0) {
                     scene.remove(this.mesh);
+                    this.mesh.geometry.dispose();
+                    this.mesh.material.dispose();
                 }
             }
         }
@@ -1132,12 +1133,15 @@
             document.getElementById('speedometer').classList.remove('hidden');
             document.getElementById('minimap').classList.remove('hidden');
             
-            playerCar = new Car3D(0, 0, cars[selectedCarIndex]);
-            
+            // Initialize Three.js if not already done
             if (!scene) {
                 initThreeJS();
             }
             
+            // Create player car
+            playerCar = new Car3D(0, 0, cars[selectedCarIndex]);
+            
+            // Start game loop
             animate();
         }
 
@@ -1228,16 +1232,21 @@
         // Gamepad
         let gamepadIndex = null;
         
-        window.addEventListener('gamepadconnected', (e) => {
-            gamepadIndex = e.gamepad.index;
-            console.log('🎮 Gamepad connected:', e.gamepad.id);
-        });
+        try {
+            window.addEventListener('gamepadconnected', (e) => {
+                gamepadIndex = e.gamepad.index;
+                console.log('🎮 Gamepad connected:', e.gamepad.id);
+            });
 
-        window.addEventListener('gamepaddisconnected', (e) => {
-            if (gamepadIndex === e.gamepad.index) {
-                gamepadIndex = null;
-            }
-        });
+            window.addEventListener('gamepaddisconnected', (e) => {
+                if (gamepadIndex === e.gamepad.index) {
+                    gamepadIndex = null;
+                }
+            });
+        } catch (e) {
+            // Gamepad API not available or blocked by permissions policy
+            console.log('ℹ️ Gamepad support disabled - keyboard controls available');
+        }
 
         function updateInput() {
             // Keyboard
@@ -1246,25 +1255,31 @@
             input.left = keys['ArrowLeft'] || keys['a'] || keys['A'];
             input.right = keys['ArrowRight'] || keys['d'] || keys['D'];
 
-            // Gamepad
+            // Gamepad (with permissions policy protection)
             if (gamepadIndex !== null) {
-                const gamepad = navigator.getGamepads()[gamepadIndex];
-                if (gamepad) {
-                    input.up = input.up || gamepad.buttons[7]?.value > 0.1 || gamepad.buttons[0]?.pressed;
-                    input.down = input.down || gamepad.buttons[6]?.value > 0.1 || gamepad.buttons[1]?.pressed;
-                    input.brake = input.brake || gamepad.buttons[2]?.pressed;
-                    
-                    const leftStickX = gamepad.axes[0];
-                    const leftStickY = gamepad.axes[1];
-                    
-                    if (Math.abs(leftStickX) > 0.2) {
-                        input.left = leftStickX < -0.2;
-                        input.right = leftStickX > 0.2;
+                try {
+                    const gamepads = navigator.getGamepads();
+                    const gamepad = gamepads[gamepadIndex];
+                    if (gamepad) {
+                        input.up = input.up || gamepad.buttons[7]?.value > 0.1 || gamepad.buttons[0]?.pressed;
+                        input.down = input.down || gamepad.buttons[6]?.value > 0.1 || gamepad.buttons[1]?.pressed;
+                        input.brake = input.brake || gamepad.buttons[2]?.pressed;
+                        
+                        const leftStickX = gamepad.axes[0];
+                        const leftStickY = gamepad.axes[1];
+                        
+                        if (Math.abs(leftStickX) > 0.2) {
+                            input.left = leftStickX < -0.2;
+                            input.right = leftStickX > 0.2;
+                        }
+                        if (Math.abs(leftStickY) > 0.2) {
+                            input.up = input.up || leftStickY < -0.2;
+                            input.down = input.down || leftStickY > 0.2;
+                        }
                     }
-                    if (Math.abs(leftStickY) > 0.2) {
-                        input.up = input.up || leftStickY < -0.2;
-                        input.down = input.down || leftStickY > 0.2;
-                    }
+                } catch (e) {
+                    // Gamepad access blocked by permissions policy - silently fail
+                    gamepadIndex = null;
                 }
             }
         }
@@ -1373,6 +1388,8 @@
         // Initialize on load
         window.addEventListener('load', () => {
             console.log('🏁 Rally Drift Championship 3D Ready!');
+            // Pre-initialize Three.js scene for smoother start
+            initThreeJS();
         });
     </script>
 </body>
